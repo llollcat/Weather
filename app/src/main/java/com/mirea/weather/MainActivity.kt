@@ -11,6 +11,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.ExpandableListView
 import android.widget.SimpleExpandableListAdapter
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -66,6 +67,8 @@ class MainActivity : AppCompatActivity() {
                 childDataList,
                 android.R.layout.simple_list_item_1, arrayOf(childName), intArrayOf(android.R.id.text1))
         val expandableListView = findViewById<ExpandableListView>(R.id.cites)
+        val emptyText = findViewById<TextView>(R.id.empty_text_view)
+        expandableListView.emptyView = emptyText
         expandableListView.setAdapter(adapter)
 
 
@@ -96,6 +99,7 @@ class MainActivity : AppCompatActivity() {
                     cites.remove(cityToDelete)
                     groupDataList.removeAt(groupPosition)
                     childDataList.removeAt(groupPosition)
+                    emptyText.text = "Нет избранных городов"
                     adapter.notifyDataSetChanged()
 
                     prefs.edit().putStringSet("cites", cites.toSet()).apply()
@@ -113,11 +117,7 @@ class MainActivity : AppCompatActivity() {
                 if (prefs.contains("cites")) {
                     val cites: MutableSet<String>? = prefs.getStringSet("cites", hashSetOf())
 
-                    groupDataList.clear()
-                    childDataList.clear()
-                    adapter.notifyDataSetChanged()
-                    latitude.clear()
-                    longitude.clear()
+
 
 
                     if ((cites != null)) {
@@ -125,6 +125,12 @@ class MainActivity : AppCompatActivity() {
                             // для создания треда
                             val executor = Executors.newSingleThreadExecutor()
                             val handler = Handler(Looper.getMainLooper())
+                            groupDataList.clear()
+                            childDataList.clear()
+                            emptyText.text = ""
+                            adapter.notifyDataSetChanged()
+                            latitude.clear()
+                            longitude.clear()
 
                             for (city in cites)
                                 executor.execute {
@@ -145,15 +151,17 @@ class MainActivity : AppCompatActivity() {
                                             childDataList.add(list)
                                             adapter.notifyDataSetChanged()
 
-                                        } else
+
+                                        } else {
                                             Toast.makeText(this, "Отсутствует подключение", Toast.LENGTH_LONG).show()
+                                            emptyText.text = "Нет избранных городов"
+                                        }
                                     }
                                 }
 
                         } else
                             Toast.makeText(this, "Нет избранных городов", Toast.LENGTH_LONG).show()
-                    } else
-                        Toast.makeText(this, "Нет избранных городов", Toast.LENGTH_LONG).show()
+                    }
                 } else
                     Toast.makeText(this, "Нет избранных городов", Toast.LENGTH_LONG).show()
             } else
